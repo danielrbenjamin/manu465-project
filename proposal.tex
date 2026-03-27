@@ -1,0 +1,121 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\setstretch{1.15}
+
+\title{\textbf{Smart Manufacturing IoT-Based Predictive Maintenance and Anomaly Detection}}
+\author{
+\textbf{Group 22} \\
+Aomsin Nimsombun \\
+Colin Xiong \\
+Kaoklong Panitpongpun \\
+Daniel Benjamin
+}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{1. Problem Statement and Motivation}
+
+Modern smart manufacturing systems utilize IoT-enabled sensors to continuously monitor equipment conditions. Machines generate real-time measurements such as temperature, vibration, pressure, humidity, and energy consumption. Despite this infrastructure, many facilities still rely on reactive or scheduled maintenance strategies. These approaches often lead to unexpected breakdowns, unnecessary servicing, and increased operational costs.
+
+Unplanned downtime disrupts production flow, reduces system efficiency, and increases financial risk. Even marginal improvements in early failure detection can significantly reduce maintenance costs and production losses. Therefore, predictive maintenance supported by machine learning has become a critical component of Industry 4.0 systems.
+
+The objective of this project is to develop and evaluate machine learning models capable of predicting whether maintenance is required based on IoT sensor data. In addition, anomaly detection techniques will be explored to identify abnormal machine behavior prior to failure events. The project aims to demonstrate how data-driven models can enhance proactive maintenance scheduling and operational efficiency.
+
+\section*{2. Dataset Description}
+
+This project uses the \textit{Smart Manufacturing IoT-Cloud Monitoring Dataset} from Kaggle. The dataset simulates real-time sensor measurements collected from industrial machines in a smart factory environment.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Dataset Property} & \textbf{Description} \\
+\midrule
+Number of Records & $\sim$100,000 \\
+Number of Machines & 50 unique machines \\
+Time Resolution & 1-minute intervals \\
+Primary Sensors & Temperature, Vibration, Pressure, Humidity \\
+Additional Features & Energy Consumption, Downtime Risk Score \\
+Operational Status & Idle, Running, Failure \\
+Target Variable & Maintenance Required (0 = No, 1 = Yes) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The dataset includes both continuous sensor measurements and categorical operational states. The primary modeling target is \textit{maintenance\_required}, making this a supervised binary classification problem. The presence of multiple machines and time-indexed observations also enables exploratory anomaly detection and trend analysis. The dataset is appropriate for machine learning due to its size, structure, and direct relevance to industrial predictive maintenance.
+
+\section*{3. Methodology}
+
+The problem is formulated as a supervised classification task, where the goal is to predict maintenance requirements using sensor measurements.
+
+\subsection*{3.1 Data Preparation}
+
+Initial dataset inspection will be conducted using common data exploration methods to understand structure, feature distributions, and potential missing values. Timestamp variables will be converted to datetime format, and categorical variables will be encoded appropriately. Numerical features will be standardized where necessary. A stratified train-test split will be applied to preserve class balance and prevent sampling bias.
+
+\subsection*{3.2 Proposed Machine Learning Models}
+
+To ensure structured comparison, models of increasing complexity will be implemented.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Model} & \textbf{Purpose} \\
+\midrule
+Logistic Regression & Interpretable baseline classifier \\
+Random Forest & Capture non-linear feature interactions \\
+Neural Network (MLP) & Model higher-order complex relationships \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Dimensionality reduction using Principal Component Analysis (PCA) may be applied to evaluate feature compression effects. Additionally, Isolation Forest may be explored for anomaly detection comparison.
+
+\subsection*{3.3 Model Evaluation}
+
+Model performance will be assessed using standard classification metrics. Because missed failure predictions may carry higher cost than false alarms, special attention will be given to recall and precision trade-offs.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Metric} & \textbf{Purpose} \\
+\midrule
+Accuracy & Overall prediction correctness \\
+Precision & Reliability of maintenance alerts \\
+Recall & Ability to detect true maintenance cases \\
+F1-score & Balance between precision and recall \\
+Confusion Matrix & Analysis of error types \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Hyperparameter tuning will be conducted using cross-validation on the training set, while a separate test set will be reserved for final evaluation to avoid data leakage.
+
+\section*{4. Project Goals and Expected Outcomes}
+
+The expected outcomes of this project are summarized below.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{p{0.95\linewidth}}
+\toprule
+\textbf{Expected Deliverables} \\
+\midrule
+Development of a validated predictive maintenance classification model. \\
+Comparative evaluation of multiple machine learning techniques. \\
+Identification of the most influential sensor features. \\
+Discussion of integration into IoT-based smart manufacturing systems. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This project is feasible within the scope of the course and aligns with real-world engineering challenges in smart manufacturing. The emphasis will be placed on clear methodology, interpretability, and practical industrial relevance rather than overly complex modeling approaches.
+
+\end{document}
