@@ -191,36 +191,36 @@ Figure~\ref{fig:roc} compares ROC curves for all models. All supervised models p
 \subsection{Strengths}
 
 \begin{itemize}[noitemsep]
-    \item \textbf{Comprehensive methodology:} Five ML techniques spanning linear models, ensembles, deep learning, dimensionality reduction, and unsupervised anomaly detection, providing a thorough comparison across model families.
-    \item \textbf{Rigorous evaluation:} Stratified splitting, cross-validation, multiple metrics (accuracy, precision, recall, F1, ROC-AUC), and a naive baseline ensure models learn beyond trivial predictions.
-    \item \textbf{Data leakage prevention:} \texttt{StandardScaler} fitted only on training data; test set not seen during training or tuning.
-    \item \textbf{Systematic tuning:} GridSearchCV for Random Forest and Early Stopping for the ANN both prevent overfitting through principled mechanisms.
-    \item \textbf{Actionable insights:} Feature importance analysis identified the most predictive sensors, providing direct value for maintenance engineers.
+    \item \textbf{Comprehensive methodology:} Five techniques spanning linear models, ensembles, deep learning, dimensionality reduction, and unsupervised anomaly detection.
+    \item \textbf{Rigorous evaluation:} Stratified splitting, cross-validation, multiple metrics (accuracy, precision, recall, F1, ROC-AUC), and a naive baseline.
+    \item \textbf{Data leakage prevention:} \texttt{StandardScaler} fitted only on training data; test set unseen during training or tuning.
+    \item \textbf{Systematic tuning:} GridSearchCV for Random Forest and Early Stopping for the ANN prevent overfitting.
+    \item \textbf{Actionable insights:} Feature importance rankings identify the most predictive sensors for maintenance engineers.
 \end{itemize}
 
 \subsection{Limitations}
 
 \begin{itemize}[noitemsep]
-    \item \textbf{Simulated data:} The dataset is synthetically generated and may not capture real-world noise, sensor drift, missing readings, and operational complexity.
-    \item \textbf{Potential data leakage:} Features such as \texttt{downtime\_risk}, \texttt{anomaly\_flag}, and \texttt{predicted\_remaining\_life} may encode the target variable, inflating performance---particularly Random Forest's perfect scores. These features may not be available at prediction time in a real deployment.
-    \item \textbf{No temporal modeling:} All models treat each record independently, ignoring sequential degradation patterns and time-series structure.
-    \item \textbf{Single dataset:} Generalizability to different manufacturing environments and sensor configurations remains unvalidated.
+    \item \textbf{Simulated data:} The dataset is synthetic and may not capture real-world noise, sensor drift, or missing readings.
+    \item \textbf{Potential data leakage:} Features such as \texttt{downtime\_risk}, \texttt{anomaly\_flag}, and \texttt{predicted\_remaining\_life} may encode the target, inflating performance---particularly RF's perfect scores.
+    \item \textbf{No temporal modeling:} All models treat each record independently, ignoring sequential degradation patterns.
+    \item \textbf{Single dataset:} Generalizability to different manufacturing environments remains unvalidated.
 \end{itemize}
 
 \subsection{Potential Improvements}
 
 \begin{itemize}[noitemsep]
-    \item \textbf{Temporal modeling:} LSTM or GRU networks could exploit sequential sensor degradation trends, potentially improving predictions on raw sensor data.
-    \item \textbf{Feature engineering:} Rolling window statistics (mean, standard deviation, rate of change) and per-machine baselines could enrich the feature space.
-    \item \textbf{Leakage investigation:} Retraining without derived features would clarify how much performance comes from raw sensors alone.
-    \item \textbf{Explainability:} SHAP values could provide instance-level feature attribution, helping engineers understand \emph{why} specific predictions were made.
+    \item \textbf{Temporal modeling:} LSTM or GRU networks could exploit sequential degradation trends.
+    \item \textbf{Feature engineering:} Rolling window statistics and per-machine baselines could enrich the feature space.
+    \item \textbf{Leakage investigation:} Retraining without derived features would clarify raw-sensor performance.
+    \item \textbf{Explainability:} SHAP values could provide instance-level feature attribution.
 \end{itemize}
 
 % ============================================================
 \section{Conclusion}
 % ============================================================
 
-This project applied five ML techniques to a 100,000-record IoT dataset: Logistic Regression (F1 = \lrFone), Random Forest (F1 = \rfFone), TensorFlow/Keras ANN (F1 = \annFone), PCA, and Isolation Forest (F1 = \isoFone). The ANN achieved the best precision-recall balance, missing only \annFN\ maintenance events. PCA confirmed moderate redundancy (\pcaNcomp\ of 10 components for 95\% variance). The primary limitations are the synthetic dataset, potential feature leakage, and absence of temporal modeling. Future work should explore recurrent architectures, feature auditing, and real-world validation.
+This project applied five ML techniques to a 100,000-record IoT dataset: Logistic Regression (F1 = \lrFone), Random Forest (F1 = \rfFone), TensorFlow/Keras ANN (F1 = \annFone), PCA, and Isolation Forest (F1 = \isoFone). Random Forest achieved the highest raw F1 score, but its perfect metrics are likely inflated by derived features that encode the target, so its real-world generalization remains uncertain. Excluding RF, the ANN offered the strongest precision-recall balance among the remaining models, missing only \annFN\ maintenance events. PCA confirmed moderate redundancy (\pcaNcomp\ of 10 components for 95\% variance). The primary limitations are the synthetic dataset, potential feature leakage, and absence of temporal modeling. Future work should explore recurrent architectures, feature auditing, and real-world validation.
 
 % ============================================================
 \begin{thebibliography}{9}

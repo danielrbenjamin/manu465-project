@@ -172,8 +172,8 @@ Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
 \vspace{0.2cm}
 \begin{itemize}
     \item All supervised models significantly outperform the naive baseline ($\sim$\naiveAcc)
-    \item RF achieves perfect scores --- but warrants scrutiny (possible feature leakage)
-    \item ANN provides the best precision--recall trade-off for maintenance
+    \item RF achieves the highest F1 --- but perfect scores likely inflated by feature leakage
+    \item Excluding RF, ANN provides the strongest precision--recall trade-off
 \end{itemize}
 \end{frame}
 
@@ -282,8 +282,8 @@ Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
 \begin{frame}{Conclusion \& Future Work}
 \textbf{Key findings:}
 \begin{itemize}
-    \item ANN achieved the best precision--recall trade-off (F1 = \annFone, only \annFN\ missed)
-    \item RF's perfect scores likely reflect feature leakage, not true generalization
+    \item RF achieved the highest F1 (\rfFone), but perfect scores likely reflect feature leakage
+    \item Excluding RF, ANN offered the strongest precision--recall balance (F1 = \annFone, only \annFN\ missed)
     \item Isolation Forest provides viable label-free detection (AUC = \isoAuc)
     \item PCA confirms only moderate feature redundancy
 \end{itemize}

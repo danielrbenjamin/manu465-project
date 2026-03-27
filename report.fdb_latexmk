@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1774602889.1926 "c:/Users/danie/Documents/Documents/Education/UBC/UBC 25-26/TERM 2/MANU 465/project/submission/report.tex" "report.pdf" "report" 1774602890.39715 0
-  "C:/Users/danie/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1771918393 148461 125a398729ac0b53806219aeee91287e ""
+["pdflatex"] 1774612367.92818 "c:/Users/danie/Documents/Documents/Education/UBC/UBC 25-26/TERM 2/MANU 465/project/submission/report.tex" "report.pdf" "report" 1774612369.09274 0
+  "C:/Users/danie/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1774605269 148640 5cf4373a81bca5b8ac5aeff3354036eb ""
   "C:/Users/danie/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcrm1095.pk" 1774596137 12668 204c9ff56d33b573abb1baead154530a ""
   "C:/Users/danie/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1768892401 13333487 9ef158ed9c1934aae24964f55805ea43 ""
   "C:/Users/danie/AppData/Local/Programs/MiKTeX/fonts/tfm/jknappen/ec/tcrm1095.tfm" 993062508 1460 8005ce585ff351dff78998923504da5e ""
@@ -87,15 +87,15 @@
   "C:/Users/danie/AppData/Local/Programs/MiKTeX/tex/latex/rerunfilecheck/rerunfilecheck.sty" 1751104012 9684 a33a14b82ce60d6e77cb9be689d79ee6 ""
   "C:/Users/danie/AppData/Local/Programs/MiKTeX/tex/latex/setspace/setspace.sty" 1670403145 22490 8cac309b79a4c53a4ffce4b1b07aead0 ""
   "C:/Users/danie/AppData/Local/Programs/MiKTeX/tex/latex/url/url.sty" 1388490452 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
-  "c:/Users/danie/Documents/Documents/Education/UBC/UBC 25-26/TERM 2/MANU 465/project/submission/report.tex" 1774602888 18756 a3ebca6a9a0b690b5490f1260162526a ""
-  "figures/ann_learning_curves.png" 1774600920 157796 07994cb8bb009d2286a6a0b670233049 ""
-  "figures/correlation_heatmap.png" 1774600920 220199 63261649344081bc19a7fba64d0dcc2f ""
-  "figures/feature_importance.png" 1774600920 78876 32b7892005d2d1002d4b6f2f9a2084ce ""
-  "figures/roc_curves.png" 1774600920 141893 f934e41c1c3334909b5fd64f3767bb01 ""
-  "metrics.tex" 1774602794 1610 eec6cf415d78f3b59d50edeea4d4ba4c ""
-  "report.aux" 1774602890 5407 8e2ac49fc9a440581b00346d04aac2f9 "pdflatex"
-  "report.out" 1774602890 4517 e21ab7d98ac5a576e4f366b703b11610 "pdflatex"
-  "report.tex" 1774602888 18756 a3ebca6a9a0b690b5490f1260162526a ""
+  "c:/Users/danie/Documents/Documents/Education/UBC/UBC 25-26/TERM 2/MANU 465/project/submission/report.tex" 1774612365 20175 cb2595f2472a3fa5029c82c1149b8b16 ""
+  "figures/ann_learning_curves.png" 1774606021 128440 e3e49e58696705d929323eb8e8344e7a ""
+  "figures/correlation_heatmap.png" 1774606021 220199 63261649344081bc19a7fba64d0dcc2f ""
+  "figures/feature_importance.png" 1774606021 78876 32b7892005d2d1002d4b6f2f9a2084ce ""
+  "figures/roc_curves.png" 1774606021 141925 32c3c9ff339f6c678745b0a492326b76 ""
+  "metrics.tex" 1774610063 1670 2614e68e133bd141bf40ea929961150a ""
+  "report.aux" 1774612368 5407 8cf3f34917cfde9e655f961e69eb3ab1 "pdflatex"
+  "report.out" 1774612368 4517 e21ab7d98ac5a576e4f366b703b11610 "pdflatex"
+  "report.tex" 1774612365 20175 cb2595f2472a3fa5029c82c1149b8b16 ""
   (generated)
   "report.aux"
   "report.log"
