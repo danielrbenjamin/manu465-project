@@ -185,6 +185,7 @@ Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
     \item Perfect precision (\lrPrec) --- \textbf{zero} false alarms
     \item Recall = \lrRec\ (\lrFN\ missed out of \lrTotalPos)
     \item CV F1: $\lrCvMean \pm \lrCvStd$ (stable)
+    \item Conservative boundary: only flags when highly confident, so missed failures could cause unplanned downtime
 \end{itemize}
 \end{column}
 \begin{column}{0.48\textwidth}
@@ -192,7 +193,7 @@ Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
 \begin{itemize}
     \item All metrics = \rfFone\ (perfect)
     \item Best params: \rfBestEst\ trees, depth \rfBestDepth
-    \item Top features: operational/derived, \textbf{not raw sensors}
+    \item Top features are \textbf{derived/operational}, not raw sensors --- suggests data leakage inflates performance
 \end{itemize}
 \end{column}
 \end{columns}
@@ -208,9 +209,9 @@ Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
 \begin{column}{0.48\textwidth}
 \begin{itemize}
     \item F1 = \annFone, Recall = \annRec
-    \item Only \textbf{\annFN\ missed failures} (vs.\ \lrFN\ for LR)
-    \item \annFP\ false alarms --- favorable trade-off
-    \item Early Stopping at epoch $\sim$\annBestEpoch
+    \item Only \textbf{\annFN\ missed failures} (vs.\ \lrFN\ for LR) --- a plant running this model catches nearly every impending failure
+    \item \annFP\ false alarms trigger only preventive inspections, far cheaper than one unplanned breakdown
+    \item Early Stopping at epoch $\sim$\annBestEpoch\ confirmed the model learns essential patterns early
 \end{itemize}
 \end{column}
 \begin{column}{0.48\textwidth}
@@ -227,15 +228,15 @@ Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
     \item \pcaNcomp/10 components for 95\% variance
     \item PC1: \pcaVarOne\%, PC2: \pcaVarTwo\%
     \item LR+PCA F1 = \pcaFone\ ($\Delta$F1 = $\pcaDeltaF$)
-    \item Moderate redundancy only
+    \item Sensors encode largely distinct information; compression yields minimal benefit here
 \end{itemize}
 \end{column}
 \begin{column}{0.48\textwidth}
 \textbf{Isolation Forest (unsupervised):}
 \begin{itemize}
     \item F1 = \isoFone, AUC = \isoAuc
-    \item \isoFP\ false positives, \isoFN\ false negatives
-    \item Viable when labeled data is scarce
+    \item \isoFP\ false positives waste technician time; \isoFN\ missed failures risk downtime
+    \item Still viable as a first line of defense when labeled failure data is unavailable
 \end{itemize}
 \end{column}
 \end{columns}

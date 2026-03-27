@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.1.19)  27 MAR 2026 02:14
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.1.19)  27 MAR 2026 04:19
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -454,20 +454,20 @@ File: figures/feature_importance.png Graphic file (type png)
 Package pdftex.def Info: figures/feature_importance.png  used on input line 152
 .
 (pdftex.def)             Requested size: 328.82707pt x 204.70859pt.
-<figures/ann_learning_curves.png, id=159, 859.65166pt x 317.62665pt>
-File: figures/ann_learning_curves.png Graphic file (type png)
-<use figures/ann_learning_curves.png>
-Package pdftex.def Info: figures/ann_learning_curves.png  used on input line 16
-3.
-(pdftex.def)             Requested size: 399.29463pt x 147.53493pt.
  [5
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.167 
+l.160 
        <./figures/feature_importance.png>]
-<figures/roc_curves.png, id=168, 570.933pt x 427.47705pt>
+<figures/ann_learning_curves.png, id=165, 859.65166pt x 317.62665pt>
+File: figures/ann_learning_curves.png Graphic file (type png)
+<use figures/ann_learning_curves.png>
+Package pdftex.def Info: figures/ann_learning_curves.png  used on input line 16
+3.
+(pdftex.def)             Requested size: 399.29463pt x 147.53493pt.
+<figures/roc_curves.png, id=167, 570.933pt x 427.47705pt>
 File: figures/roc_curves.png Graphic file (type png)
 <use figures/roc_curves.png>
 Package pdftex.def Info: figures/roc_curves.png  used on input line 182.
@@ -502,13 +502,13 @@ Package rerunfilecheck Info: File `report.out' has not changed.
 (rerunfilecheck)             Checksum: E21AB7D98AC5A576E4F366B703B11610;4517.
  ) 
 Here is how much of TeX's memory you used:
- 10321 strings out of 467871
- 160914 string characters out of 5418376
- 585824 words of memory out of 5000000
- 39035 multiletter control sequences out of 15000+600000
+ 10323 strings out of 467871
+ 160935 string characters out of 5418376
+ 585831 words of memory out of 5000000
+ 39037 multiletter control sequences out of 15000+600000
  635920 words of font info for 68 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,9n,79p,1090b,565s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,9n,79p,1254b,565s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\danie\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm
 1095.pk><C:/Users/danie/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfon
 ts/cm/cmbx10.pfb><C:/Users/danie/AppData/Local/Programs/MiKTeX/fonts/type1/publ
@@ -524,7 +524,7 @@ pfb><C:/Users/danie/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/c
 m/cmti10.pfb><C:/Users/danie/AppData/Local/Programs/MiKTeX/fonts/type1/public/a
 msfonts/cm/cmti12.pfb><C:/Users/danie/AppData/Local/Programs/MiKTeX/fonts/type1
 /public/amsfonts/cm/cmtt10.pfb>
-Output written on report.pdf (8 pages, 691822 bytes).
+Output written on report.pdf (8 pages, 679493 bytes).
 PDF statistics:
  259 PDF objects out of 1000 (max. 8388607)
  49 named destinations out of 1000 (max. 500000)
