@@ -58,29 +58,26 @@
 \begin{frame}{Dataset Overview}
 \textit{Smart Manufacturing IoT-Cloud Monitoring Dataset} (Kaggle)
 
-\vspace{0.3cm}
+\vspace{0.2cm}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
 \begin{itemize}
     \item 100,000 records, 50 machines
     \item 1-minute intervals over 69 days
-    \item 13 columns (5 sensor, 3 derived, 2 operational, 2 ID, 1 target)
+    \item 13 columns total; 5 raw sensor features used
+    \item Derived features excluded (data leakage)
     \item No missing values
 \end{itemize}
-\end{column}
-\begin{column}{0.48\textwidth}
-\textbf{Class distribution:}
-\begin{itemize}
-    \item No maintenance: \noMaintPct\%
-    \item Maintenance required: \maintPct\%
-\end{itemize}
 
-\vspace{0.2cm}
+\vspace{0.1cm}
 \textbf{Key correlations with target:}
 \begin{itemize}
     \item Temperature: $r = \tempCorr$
     \item Vibration: $r = \vibCorr$
 \end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\includegraphics[width=\textwidth]{figures/class_distribution.png}
 \end{column}
 \end{columns}
 \end{frame}
@@ -99,9 +96,9 @@ Weak individual correlations suggest \textbf{non-linear feature combinations} ar
 
 \begin{frame}{Preprocessing}
 \begin{enumerate}
-    \item Dropped non-predictive identifiers (\texttt{timestamp}, \texttt{machine\_id})
-    \item Label-encoded \texttt{failure\_type}
-    \item Retained 10 features (5 sensor + 2 operational + 3 derived)
+    \item Dropped identifiers (\texttt{timestamp}, \texttt{machine\_id})
+    \item Excluded derived features that encode the target (\texttt{machine\_status}, \texttt{anomaly\_flag}, \texttt{predicted\_remaining\_life}, \texttt{downtime\_risk}, \texttt{failure\_type})
+    \item Retained 5 raw sensor features
     \item Stratified 80/20 train-test split (80k / 20k samples)
     \item StandardScaler fitted \textbf{only on training data} (prevents leakage)
     \item \texttt{class\_weight='balanced'} for imbalanced classes
@@ -135,13 +132,12 @@ Accuracy, Precision, Recall, F1, ROC-AUC, Confusion Matrices
 
 \begin{frame}{ANN Architecture}
 \begin{center}
-Input (10) $\rightarrow$ Dense(64, ReLU) $\rightarrow$ Dense(32, ReLU) $\rightarrow$ Dense(16, ReLU) $\rightarrow$ Dense(1, sigmoid)
+Input (5) $\rightarrow$ Dense(64, ReLU) $\rightarrow$ Dense(32, ReLU) $\rightarrow$ Dense(16, ReLU) $\rightarrow$ Dense(1, sigmoid)
 \end{center}
 
 \vspace{0.3cm}
 \begin{itemize}
-    \item 3,329 trainable parameters
-    \item Adam optimizer (lr = 0.001), binary crossentropy
+    \item 3 hidden layers, Adam optimizer (lr = 0.001), binary crossentropy
     \item Early Stopping (patience = 10) with best-weight restoration
     \item Balanced class weights, batch size 256, 20\% validation split
 \end{itemize}
@@ -152,28 +148,34 @@ Input (10) $\rightarrow$ Dense(64, ReLU) $\rightarrow$ Dense(32, ReLU) $\rightar
 % ============================================================
 
 \begin{frame}{Model Comparison}
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
 \begin{table}
 \centering
-\small
+\scriptsize
 \begin{tabular}{lccccc}
 \toprule
 \textbf{Model} & \textbf{Acc.} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{AUC} \\
 \midrule
 Naive Baseline         & $\sim$\naiveAcc & --- & --- & --- & --- \\
-Logistic Regression    & \lrAcc & \lrPrec & \lrRec & \lrFone & \lrAuc \\
+Logistic Reg.          & \lrAcc & \lrPrec & \lrRec & \lrFone & \lrAuc \\
 Random Forest          & \rfAcc & \rfPrec & \rfRec & \rfFone & \rfAuc \\
 Neural Network         & \annAcc & \annPrec & \annRec & \annFone & \annAuc \\
-LR + PCA (\pcaNcomp\ PCs) & \pcaAcc & \pcaPrec & \pcaRec & \pcaFone & \pcaAuc \\
+LR + PCA               & \pcaAcc & \pcaPrec & \pcaRec & \pcaFone & \pcaAuc \\
 Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
 \bottomrule
 \end{tabular}
 \end{table}
+\end{column}
+\begin{column}{0.46\textwidth}
+\includegraphics[width=\textwidth]{figures/f1_comparison.png}
+\end{column}
+\end{columns}
 
-\vspace{0.2cm}
-\begin{itemize}
-    \item All supervised models significantly outperform the naive baseline ($\sim$\naiveAcc)
-    \item RF achieves the highest F1 --- but perfect scores likely inflated by feature leakage
-    \item Excluding RF, ANN provides the strongest precision--recall trade-off
+\vspace{0.1cm}
+\begin{itemize}\small
+    \item Non-linear models (RF, ANN) achieve F1 $\approx$ 0.62 vs.\ LR's \lrFone
+    \item RF and ANN reach nearly identical AUC --- performance ceiling with 5 raw sensors
 \end{itemize}
 \end{frame}
 
@@ -182,18 +184,19 @@ Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
 \begin{column}{0.48\textwidth}
 \textbf{Logistic Regression:}
 \begin{itemize}
-    \item Perfect precision (\lrPrec) --- \textbf{zero} false alarms
-    \item Recall = \lrRec\ (\lrFN\ missed out of \lrTotalPos)
-    \item CV F1: $\lrCvMean \pm \lrCvStd$ (stable)
-    \item Conservative boundary: only flags when highly confident, so missed failures could cause unplanned downtime
+    \item Accuracy \lrAcc\ $<$ naive \naiveAcc\ (balanced weights sacrifice majority-class accuracy)
+    \item Recall \lrRec\ catches 62\% of failures; precision \lrPrec\ means many false alarms
+    \item CV F1: $\lrCvMean \pm \lrCvStd$ --- very stable
+    \item Linear boundary cannot capture non-linear interactions (best $r$ = \tempCorr)
 \end{itemize}
 \end{column}
 \begin{column}{0.48\textwidth}
 \textbf{Random Forest (tuned):}
 \begin{itemize}
-    \item All metrics = \rfFone\ (perfect)
-    \item Best params: \rfBestEst\ trees, depth \rfBestDepth
-    \item Top features are \textbf{derived/operational}, not raw sensors --- suggests data leakage inflates performance
+    \item F1 improved from \lrFone\ (LR) to \rfFone\ --- non-linear interactions matter
+    \item Precision \rfPrec\ $\approx$ perfect: virtually no false alarms
+    \item Recall \rfRec\ --- conservative, misses $>$50\% of failures
+    \item \rfImpNameA\ (\rfImpA) + \rfImpNameB\ (\rfImpB) = 58\% of importance
 \end{itemize}
 \end{column}
 \end{columns}
@@ -208,10 +211,11 @@ Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
 \begin{itemize}
-    \item F1 = \annFone, Recall = \annRec
-    \item Only \textbf{\annFN\ missed failures} (vs.\ \lrFN\ for LR) --- a plant running this model catches nearly every impending failure
-    \item \annFP\ false alarms trigger only preventive inspections, far cheaper than one unplanned breakdown
-    \item Early Stopping at epoch $\sim$\annBestEpoch\ confirmed the model learns essential patterns early
+    \item F1 = \annFone\ $\approx$ RF's \rfFone\ --- similar ceiling with 5 features
+    \item Precision \annPrec, recall \annRec\ --- middle ground between LR and RF
+    \item \annFN\ missed failures, \annFP\ false alarms
+    \item Early Stopping at epoch $\sim$\annBestEpoch; val accuracy \annValAcc
+    \item AUC = \annAuc, tied with RF --- both architectures find similar boundaries
 \end{itemize}
 \end{column}
 \begin{column}{0.48\textwidth}
@@ -220,31 +224,42 @@ Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
 \end{columns}
 \end{frame}
 
-\begin{frame}{PCA \& Isolation Forest}
+\begin{frame}{Confusion Matrices — All Models}
+\begin{center}
+\includegraphics[width=0.72\textwidth]{figures/confusion_matrices.png}
+\end{center}
+\end{frame}
+
+\begin{frame}{PCA — Variance Analysis}
 \begin{columns}[T]
-\begin{column}{0.48\textwidth}
-\textbf{PCA:}
+\begin{column}{0.42\textwidth}
 \begin{itemize}
-    \item \pcaNcomp/10 components for 95\% variance
-    \item PC1: \pcaVarOne\%, PC2: \pcaVarTwo\%
-    \item LR+PCA F1 = \pcaFone\ ($\Delta$F1 = $\pcaDeltaF$)
-    \item Sensors encode largely distinct information; compression yields minimal benefit here
+    \item All \pcaNcomp/5 components needed for 95\% variance
+    \item PC1: \pcaVarOne\%, PC2: \pcaVarTwo\% --- nearly uniform ($\approx$20\% each)
+    \item LR+PCA F1 = \pcaFone\ --- identical to full LR ($\Delta$F1 = $\pcaDeltaF$)
+    \item Sensors are nearly orthogonal: no redundancy, every sensor matters
 \end{itemize}
 \end{column}
-\begin{column}{0.48\textwidth}
-\textbf{Isolation Forest (unsupervised):}
-\begin{itemize}
-    \item F1 = \isoFone, AUC = \isoAuc
-    \item \isoFP\ false positives waste technician time; \isoFN\ missed failures risk downtime
-    \item Still viable as a first line of defense when labeled failure data is unavailable
-\end{itemize}
+\begin{column}{0.56\textwidth}
+\includegraphics[width=\textwidth]{figures/pca_scree_plot.png}
 \end{column}
 \end{columns}
+\end{frame}
 
-\vspace{0.3cm}
-\begin{center}
-\includegraphics[width=0.45\textwidth]{figures/roc_curves.png}
-\end{center}
+\begin{frame}{Isolation Forest — Unsupervised Anomaly Detection}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{itemize}
+    \item F1 = \isoFone, AUC = \isoAuc\ --- above random (0.5), real signal captured
+    \item \isoFP\ false alarms, \isoFN\ missed failures --- balanced error profile
+    \item Label value gap: RF F1 \rfFone\ $-$ IF F1 \isoFone\ = 0.25
+    \item Viable first-line monitoring when labeled data is unavailable
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\includegraphics[width=\textwidth]{figures/roc_curves.png}
+\end{column}
+\end{columns}
 \end{frame}
 
 % ============================================================
@@ -267,7 +282,7 @@ Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
 \textbf{Limitations:}
 \begin{itemize}
     \item Synthetic dataset --- may not reflect real-world noise
-    \item Derived features may encode the target (leakage concern)
+    \item Only 5 raw sensor features; richer engineering possible
     \item No temporal modeling (records treated independently)
     \item Single dataset --- generalizability unvalidated
 \end{itemize}
@@ -282,17 +297,19 @@ Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
 \begin{frame}{Conclusion \& Future Work}
 \textbf{Key findings:}
 \begin{itemize}
-    \item RF achieved the highest F1 (\rfFone), but perfect scores likely reflect feature leakage
-    \item Excluding RF, ANN offered the strongest precision--recall balance (F1 = \annFone, only \annFN\ missed)
-    \item Isolation Forest provides viable label-free detection (AUC = \isoAuc)
-    \item PCA confirms only moderate feature redundancy
+    \item RF achieved best F1 (\rfFone) with near-perfect precision (\rfPrec); ANN matched its AUC (\annAuc)
+    \item Non-linear models improved F1 by $\sim$50\%  over LR baseline (\lrFone)
+    \item Temperature (\rfImpA) and vibration (\rfImpB) account for 58\% of RF's predictive power
+    \item PCA: all 5 sensors are non-redundant (each $\approx$20\% variance)
+    \item Isolation Forest captures real anomalous structure (AUC = \isoAuc) without labels
+    \item Performance ceiling at F1 $\approx$ 0.62 suggests richer features are needed
 \end{itemize}
 
 \vspace{0.4cm}
 \textbf{Future work:}
 \begin{itemize}
     \item LSTM / GRU for temporal degradation patterns
-    \item Retrain without derived features to assess raw sensor performance
+    \item Rolling-window feature engineering from raw sensors
     \item SHAP values for instance-level explainability
     \item Validate on real-world industrial datasets
 \end{itemize}

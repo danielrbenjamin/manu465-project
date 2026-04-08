@@ -56,15 +56,15 @@ Number of machines & 50 unique machines \\
 Time resolution & 1-minute intervals \\
 Time range & 69 days (Jan--Mar 2025) \\
 Primary sensors & Temperature, Vibration, Pressure, Humidity \\
-Additional features & Energy Consumption, Downtime Risk Score \\
-Operational states & Idle (0), Running (1), Failure (2) \\
+Additional features & Energy Consumption \\
+Excluded (leakage) & Machine Status, Anomaly Flag, Downtime Risk, etc. \\
 Target variable & \texttt{maintenance\_required} (binary: 0/1) \\
 Missing values & None \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The dataset contains 13 columns in total. Non-predictive identifiers (\texttt{timestamp}, \texttt{machine\_id}) were removed during preprocessing, and \texttt{failure\_type} was label-encoded.
+The dataset contains 13 columns in total. Non-predictive identifiers (\texttt{timestamp}, \texttt{machine\_id}) and derived features that encode the target variable were removed during preprocessing (see Section~\ref{sec:preproc}).
 
 \subsection{Exploratory Data Analysis}
 
@@ -81,31 +81,31 @@ The class distribution is imbalanced: \noMaintPct\% no-maintenance vs.\ \maintPc
 \section{Methodology}
 % ============================================================
 
-\subsection{Data Preprocessing}
+\subsection{Data Preprocessing}\label{sec:preproc}
 
-Preprocessing involved five steps: (1) dropping non-predictive identifiers (\texttt{timestamp}, \texttt{machine\_id}); (2) label-encoding \texttt{failure\_type}; (3) retaining 10 features---five sensor measurements, two operational indicators (\texttt{machine\_status}, \texttt{anomaly\_flag}), and three derived features (\texttt{predicted\_remaining\_life}, \texttt{downtime\_risk}, \texttt{failure\_type\_encoded}); (4) stratified 80/20 train-test split (80,000/20,000 samples) preserving class proportions; and (5) standardizing features ($z = \frac{x - \mu}{\sigma}$) using \texttt{StandardScaler} fitted \emph{only} on training data to prevent information leakage. Class imbalance (\noMaintPct\% vs.\ \maintPct\%) was addressed via \texttt{class\_weight='balanced'}, which inversely weights classes by frequency so the minority class receives higher importance during training.
+Preprocessing involved four steps: (1) dropping non-predictive identifiers (\texttt{timestamp}, \texttt{machine\_id}) and derived features that encode the target variable; (2) retaining only 5 raw sensor features---temperature, vibration, humidity, pressure, and energy consumption; (3) stratified 80/20 train-test split (80,000/20,000 samples) preserving class proportions; and (4) standardizing features ($z = \frac{x - \mu}{\sigma}$) using \texttt{StandardScaler} fitted \emph{only} on training data to prevent information leakage. Five derived features were excluded (\texttt{machine\_status}, \texttt{anomaly\_flag}, \texttt{predicted\_remaining\_life}, \texttt{downtime\_risk}, \texttt{failure\_type}) because they encode the target: e.g., \texttt{machine\_status}=2 directly indicates failure. Class imbalance (\noMaintPct\% vs.\ \maintPct\%) was addressed via \texttt{class\_weight='balanced'}.
 
 \subsection{Machine Learning Models}
 
 \subsubsection{Model 1: Logistic Regression (Baseline)}
 
-Logistic Regression was chosen as the interpretable baseline because of its well-understood linear decision boundary and probabilistic output. It models the probability of maintenance as a sigmoid function of weighted input features: $P(y=1|\mathbf{x}) = \sigma(\mathbf{w}^T\mathbf{x} + b)$. The L-BFGS solver was used with balanced class weights and max 1000 iterations. Five-fold cross-validation with F1-score (rather than accuracy, which is misleading for imbalanced data) assessed generalization stability.
+Logistic Regression was chosen as the baseline for its interpretability and well-understood linear decision boundary. It models $P(y=1|\mathbf{x}) = \sigma(\mathbf{w}^T\mathbf{x} + b)$, providing a clear reference point against which more complex models are compared. The L-BFGS solver was used with balanced class weights (giving $\sim$4$\times$ more weight to the minority class) and max 1000 iterations. Five-fold cross-validation with F1-score---rather than accuracy, which is misleading for imbalanced data---assessed generalization stability.
 
 \subsubsection{Model 2: Random Forest with Hyperparameter Tuning}
 
-Random Forest was selected to capture non-linear feature interactions that a linear model cannot represent. It aggregates predictions from many decision trees, each trained on a bootstrap sample with random feature subsets, reducing overfitting through bagging \cite{breiman2001random}. Hyperparameter tuning via \texttt{GridSearchCV} (3-fold CV) searched over \texttt{n\_estimators} $\in$ \{100, 200\}, \texttt{max\_depth} $\in$ \{10, 20, None\}, and \texttt{min\_samples\_split} $\in$ \{2, 5\}, selecting the best configuration by F1-score. Feature importance was extracted via Gini impurity to provide actionable insights into which sensors most strongly predict maintenance needs.
+Random Forest was selected to capture non-linear feature interactions that a linear model cannot represent. It aggregates predictions from many decision trees, each trained on a bootstrap sample with random feature subsets, reducing overfitting through bagging \cite{breiman2001random}. \texttt{GridSearchCV} (3-fold CV) searched over \texttt{n\_estimators} $\in$ \{100, 200\}, \texttt{max\_depth} $\in$ \{10, 20, None\}, \texttt{min\_samples\_split} $\in$ \{2, 5\}, selecting the best configuration by F1-score. Feature importance was extracted via Gini impurity to identify which sensors most strongly predict maintenance needs.
 
 \subsubsection{Model 3: Artificial Neural Network (TensorFlow/Keras)}
 
-A feed-forward ANN was built using TensorFlow/Keras \cite{tensorflow} to test whether deeper non-linear modeling improves on the ensemble. The funnel architecture compresses representations: input (10) $\rightarrow$ Dense(64, ReLU) $\rightarrow$ Dense(32, ReLU) $\rightarrow$ Dense(16, ReLU) $\rightarrow$ Dense(1, sigmoid), totalling 3,329 parameters. Training used Adam (lr=0.001), binary crossentropy, batch size 256, 20\% validation split, balanced class weights, and \textbf{Early Stopping} (patience=10) monitoring validation loss with best-weight restoration---preventing overfitting by halting training when validation performance stops improving.
+A feed-forward ANN was built using TensorFlow/Keras \cite{tensorflow} to test whether deeper non-linear modeling improves on the ensemble. The funnel architecture progressively compresses representations: input (5) $\rightarrow$ Dense(64, ReLU) $\rightarrow$ Dense(32, ReLU) $\rightarrow$ Dense(16, ReLU) $\rightarrow$ Dense(1, sigmoid). Training used Adam (lr=0.001), binary crossentropy, batch size 256, 20\% validation split, balanced class weights, and Early Stopping (patience=10) monitoring validation loss with best-weight restoration---preventing overfitting by halting when validation performance stops improving.
 
 \subsubsection{Dimensionality Reduction: PCA}
 
-PCA was applied to evaluate the intrinsic dimensionality of the feature space by computing eigenvectors of the covariance matrix and projecting data onto directions of maximum variance. A scree plot and cumulative variance plot determined the components needed for 95\% variance retention. To quantify the practical impact of dimensionality reduction, a Logistic Regression model trained on PCA-reduced features was compared to the full-feature baseline.
+PCA was applied to evaluate the intrinsic dimensionality of the feature space by projecting data onto directions of maximum variance. A scree plot determined the components needed for 95\% variance retention. To quantify the impact of dimensionality reduction, LR trained on PCA-reduced features was compared to the full-feature baseline.
 
 \subsubsection{Anomaly Detection: Isolation Forest}
 
-Isolation Forest \cite{liu2008isolation}, an unsupervised algorithm, isolates anomalies by random partitioning---points requiring fewer partitions are anomalies. The contamination parameter was set to 0.2 ($\approx$observed maintenance rate). Performance was evaluated against true labels for comparison with supervised methods.
+Isolation Forest \cite{liu2008isolation} is an unsupervised algorithm that isolates anomalies via random partitioning---points requiring fewer splits are anomalies. It addresses the practical scenario where labeled failure data is unavailable. Contamination was set to 0.2 ($\approx$observed maintenance rate), and performance was evaluated against true labels for comparison with supervised methods.
 
 \subsection{Evaluation Metrics}
 
@@ -141,45 +141,43 @@ Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
 
 \subsection{Logistic Regression}
 
-Logistic Regression achieved accuracy of \lrAcc, perfect precision (\lrPrec), recall of \lrRec, F1 of \lrFone, and ROC-AUC of \lrAuc. It never issued a false alarm but missed $\sim$\lrMissPct\% of true maintenance cases (\lrFN\ false negatives out of \lrTotalPos\ positive samples). In a factory setting, this means $\sim$\lrFN\ maintenance events would go undetected per test-sized batch, potentially causing unplanned downtime for those machines. Cross-validation F1 scores ($\lrCvMean \pm \lrCvStd$) showed very low variance, confirming stable generalization---the model performs consistently regardless of which data fold is held out. The perfect precision indicates a conservative linear decision boundary: the model only flags maintenance when highly confident, making it suitable for scenarios where false alarms are costly (e.g., triggering an expensive shutdown procedure).
+With balanced class weights, LR trades majority-class accuracy for minority-class recall: accuracy (\lrAcc) falls below the naive baseline ($\sim$\naiveAcc) as the model aggressively flags potential failures. It catches \lrRec\ of true maintenance cases but at low precision (\lrPrec), missing \lrMissPct\% of \lrTotalPos\ positive cases. Cross-validation F1 ($\lrCvMean \pm \lrCvStd$) confirmed stable generalization. The linear decision boundary limits performance: with the strongest correlation at only $r = \tempCorr$, a linear separator cannot capture the non-linear sensor interactions that drive maintenance needs.
 
 \subsection{Random Forest}
 
-After GridSearchCV (best: \texttt{n\_estimators}=\rfBestEst, \texttt{max\_depth}=\rfBestDepth, \texttt{min\_samples\_split}=\rfBestSplit), Random Forest achieved perfect scores across all metrics (\rfFone). The jump from LR (F1~=~\lrFone) to RF (F1~=~\rfFone) quantifies how much predictive information resides in non-linear feature interactions. However, perfect classification warrants scrutiny: it likely reflects the presence of derived features (\texttt{anomaly\_flag}, \texttt{downtime\_risk}) that may encode the target variable, rather than indicating the model would generalize perfectly to raw sensor data. Feature importance (Figure~\ref{fig:importance}) identified \texttt{machine\_status} (\rfImpA), \texttt{predicted\_remaining\_life} (\rfImpB), \texttt{failure\_type\_encoded} (\rfImpC), and \texttt{anomaly\_flag} (\rfImpD) as the top four predictors, accounting for $\sim$\rfTopFourPct\% of total importance. Notably, these are all derived/operational features rather than raw sensor readings (temperature, vibration, etc.), reinforcing the leakage concern: the model excels largely because the dataset includes features that were themselves computed from the target or closely related signals.
+After GridSearchCV (best: \texttt{n\_estimators}=\rfBestEst, \texttt{max\_depth}=\rfBestDepth, \texttt{min\_samples\_split}=\rfBestSplit), RF achieved F1 of \rfFone\ and AUC of \rfAuc---a substantial improvement over LR (\lrFone). RF's strategy differs markedly: near-perfect precision (\rfPrec) means virtually no false alarms, but recall of only \rfRec\ means it misses over half of true cases, flagging failures only when very confident. Feature importance (Figure~\ref{fig:importance}) identified \rfImpNameA\ (\rfImpA), \rfImpNameB\ (\rfImpB), and \rfImpNameC\ (\rfImpC) as the top three predictors ($\sim$\rfTopThreePct\% of total importance), with temperature and vibration together accounting for over 58\% of predictive power.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.7\textwidth]{figures/feature_importance.png}
+\includegraphics[width=0.55\textwidth]{figures/feature_importance.png}
 \caption{Random Forest feature importance ranking by Gini impurity.}
 \label{fig:importance}
 \end{figure}
 
 \subsection{Neural Network (ANN)}
 
-The ANN achieved accuracy of \annAcc, precision of \annPrec, recall of \annRec, F1 of \annFone, and ROC-AUC of \annAuc. Compared to LR, it improved recall from \lrRec\ to \annRec---reducing missed maintenance cases from \lrFN\ to only \annFN---meaning a plant running this model would catch nearly every impending failure. The trade-off is a slight precision decrease to \annPrec\ (\annFP\ false alarms), but in practice each false alarm only triggers a preventive inspection, whereas each missed failure risks expensive unplanned downtime. Figure~\ref{fig:learning} shows smooth convergence with final validation accuracy of \annValAcc\ and validation loss of \annValLoss. Early Stopping halted training after $\sim$\annBestEpoch\ epochs, well before the 100-epoch maximum, confirming effective regularization and indicating the model captured the essential patterns early in training.
+The ANN achieved F1 of \annFone\ and AUC of \annAuc---remarkably similar to RF (\rfFone, \rfAuc), suggesting both architectures have found a similar decision boundary given five sensor features. The ANN generates \annFP\ false alarms while missing \annFN\ maintenance cases. Figure~\ref{fig:learning} shows smooth convergence with validation accuracy \annValAcc\ and loss \annValLoss. Early Stopping halted at epoch $\sim$\annBestEpoch\ (of 100 max); the small train-validation gap confirms healthy generalization.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/ann_learning_curves.png}
+\includegraphics[width=0.75\textwidth]{figures/ann_learning_curves.png}
 \caption{ANN training and validation curves showing convergence behavior.}
 \label{fig:learning}
 \end{figure}
 
 \subsection{PCA Analysis}
 
-PCA revealed that \pcaNcomp\ of 10 components are needed to retain 95\% of total variance, indicating only moderate redundancy---the sensor features encode largely distinct information. PC1 explains \pcaVarOne\% and PC2 explains \pcaVarTwo\% individually, together capturing less than half the total variance, so no single pair of sensors dominates the information content. LR trained on the \pcaNcomp\ PCA components achieved F1 of \pcaFone\ and ROC-AUC of \pcaAuc---a modest decrease from full-feature LR (F1 = \lrFone, $\Delta$F1 = $\pcaDeltaF$). This confirms that the two discarded components carry some discriminative signal, and that for this dataset, compressing from 10 to \pcaNcomp\ features offers minimal practical benefit---the computational savings are negligible given the small original dimensionality.
+All \pcaNcomp\ of 5 components are needed to retain 95\% of variance. PC1 explains \pcaVarOne\% and PC2 \pcaVarTwo\%---nearly equal---indicating the sensors are nearly orthogonal with minimal redundancy. LR on PCA-reduced features achieved identical performance ($\Delta$F1 = $\pcaDeltaF$) since all dimensions were retained, confirming no sensor can be dropped without losing information.
 
 \subsection{Isolation Forest}
 
-The unsupervised Isolation Forest achieved accuracy of \isoAcc, precision of \isoPrec, recall of \isoRec, F1 of \isoFone, and ROC-AUC of \isoAuc. The \isoFP\ false positives represent unnecessary inspections that waste technician time, while the \isoFN\ false negatives are missed failures that could result in unplanned downtime. Despite this, the respectable ROC-AUC demonstrates that purely data-driven anomaly scoring---without any labeled examples---captures meaningful structure in the sensor data, making it a viable first line of defense when labeled failure data is unavailable or expensive to obtain.
+The unsupervised Isolation Forest achieved F1 of \isoFone\ and AUC of \isoAuc, with \isoFP\ false alarms and \isoFN\ missed failures. The F1 gap from IF (\isoFone) to RF (\rfFone) quantifies the value of labeled data. Despite this, AUC of \isoAuc---well above random (0.5)---confirms that anomaly scoring captures meaningful structure without labels, providing a viable baseline when labeled failure data is scarce.
 
-\subsection{ROC Curve Comparison}
-
-Figure~\ref{fig:roc} compares ROC curves for all models. All supervised models perform well above the random baseline. The threshold-independent ROC comparison is valuable in practice, where the decision threshold can be tuned based on the cost ratio of missed failures to false alarms.
+Figure~\ref{fig:roc} compares ROC curves for all models, with all supervised models well above the random baseline.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.65\textwidth]{figures/roc_curves.png}
+\includegraphics[width=0.55\textwidth]{figures/roc_curves.png}
 \caption{ROC curves for all models compared on the test set.}
 \label{fig:roc}
 \end{figure}
@@ -188,21 +186,27 @@ Figure~\ref{fig:roc} compares ROC curves for all models. All supervised models p
 \section{Discussion}
 % ============================================================
 
+\subsection{Comparative Analysis}
+
+Three key patterns emerge. First, non-linear models (RF, ANN) substantially outperform LR, with F1 improving from \lrFone\ to \rfFone---confirming that maintenance prediction depends on complex sensor interactions. Second, RF and ANN converge to nearly identical AUC (\rfAuc\ vs.\ \annAuc) despite different architectures, suggesting a performance ceiling with five raw features. Third, the supervised--unsupervised gap (RF \rfFone\ vs.\ IF \isoFone) quantifies the value of labeled data, while IF's AUC (\isoAuc) confirms anomaly scoring captures real structure without supervision.
+
+The models exhibit divergent precision-recall strategies: LR favors recall (\lrRec) over precision (\lrPrec); RF near-perfect precision (\rfPrec) but lower recall (\rfRec); ANN occupies the middle ground (\annPrec, \annRec). The optimal choice depends on the relative cost of unplanned downtime vs.\ unnecessary inspections.
+
 \subsection{Strengths}
 
 \begin{itemize}[noitemsep]
     \item \textbf{Comprehensive methodology:} Five techniques spanning linear models, ensembles, deep learning, dimensionality reduction, and unsupervised anomaly detection.
-    \item \textbf{Rigorous evaluation:} Stratified splitting, cross-validation, multiple metrics (accuracy, precision, recall, F1, ROC-AUC), and a naive baseline.
-    \item \textbf{Data leakage prevention:} \texttt{StandardScaler} fitted only on training data; test set unseen during training or tuning.
-    \item \textbf{Systematic tuning:} GridSearchCV for Random Forest and Early Stopping for the ANN prevent overfitting.
-    \item \textbf{Actionable insights:} Feature importance rankings identify the most predictive sensors for maintenance engineers.
+    \item \textbf{Rigorous evaluation:} Stratified split, cross-validation, multiple metrics (accuracy, precision, recall, F1, ROC-AUC), and a naive baseline.
+    \item \textbf{Data leakage prevention:} Scaler fitted only on training data; derived features excluded.
+    \item \textbf{Systematic tuning:} GridSearchCV for RF and Early Stopping for ANN prevent overfitting.
+    \item \textbf{Actionable insights:} Feature importance from raw sensor measurements available in real-time.
 \end{itemize}
 
 \subsection{Limitations}
 
 \begin{itemize}[noitemsep]
     \item \textbf{Simulated data:} The dataset is synthetic and may not capture real-world noise, sensor drift, or missing readings.
-    \item \textbf{Potential data leakage:} Features such as \texttt{downtime\_risk}, \texttt{anomaly\_flag}, and \texttt{predicted\_remaining\_life} may encode the target, inflating performance---particularly RF's perfect scores.
+    \item \textbf{Limited feature set:} Only five raw sensor features were retained after removing derived features to avoid data leakage; richer feature engineering (e.g., rolling statistics, per-machine baselines) could improve performance.
     \item \textbf{No temporal modeling:} All models treat each record independently, ignoring sequential degradation patterns.
     \item \textbf{Single dataset:} Generalizability to different manufacturing environments remains unvalidated.
 \end{itemize}
@@ -211,8 +215,7 @@ Figure~\ref{fig:roc} compares ROC curves for all models. All supervised models p
 
 \begin{itemize}[noitemsep]
     \item \textbf{Temporal modeling:} LSTM or GRU networks could exploit sequential degradation trends.
-    \item \textbf{Feature engineering:} Rolling window statistics and per-machine baselines could enrich the feature space.
-    \item \textbf{Leakage investigation:} Retraining without derived features would clarify raw-sensor performance.
+    \item \textbf{Feature engineering:} Rolling window statistics, per-machine baselines, and interaction features could enrich the raw sensor feature set and potentially break through the $\sim$0.62 F1 ceiling observed with raw features alone.
     \item \textbf{Explainability:} SHAP values could provide instance-level feature attribution.
 \end{itemize}
 
@@ -220,7 +223,7 @@ Figure~\ref{fig:roc} compares ROC curves for all models. All supervised models p
 \section{Conclusion}
 % ============================================================
 
-This project applied five ML techniques to a 100,000-record IoT dataset: Logistic Regression (F1 = \lrFone), Random Forest (F1 = \rfFone), TensorFlow/Keras ANN (F1 = \annFone), PCA, and Isolation Forest (F1 = \isoFone). Random Forest achieved the highest raw F1 score, but its perfect metrics are likely inflated by derived features that encode the target, so its real-world generalization remains uncertain. Excluding RF, the ANN offered the strongest precision-recall balance among the remaining models, missing only \annFN\ maintenance events. PCA confirmed moderate redundancy (\pcaNcomp\ of 10 components for 95\% variance). The primary limitations are the synthetic dataset, potential feature leakage, and absence of temporal modeling. Future work should explore recurrent architectures, feature auditing, and real-world validation.
+This project applied five ML techniques to a 100,000-record IoT dataset using five raw sensor features. RF achieved the best F1 (\rfFone) with near-perfect precision (\rfPrec); ANN reached comparable AUC (\annAuc); LR (F1 = \lrFone) established a clear baseline; PCA confirmed no sensor redundancy; and Isolation Forest (AUC = \isoAuc) demonstrated viable label-free monitoring. Feature importance identified \rfImpNameA\ (\rfImpA) and \rfImpNameB\ (\rfImpB) as the top sensors. By excluding derived features, these results represent realistic sensor-only performance. Future work should explore temporal modeling, richer feature engineering, and real-world validation.
 
 % ============================================================
 \begin{thebibliography}{9}
