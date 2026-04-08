@@ -84,7 +84,7 @@
 
 \begin{frame}{Correlation Heatmap}
 \begin{center}
-\includegraphics[width=0.52\textwidth]{figures/correlation_heatmap.png}
+\includegraphics[width=0.48\textwidth]{figures/correlation_heatmap.png}
 \end{center}
 \vspace{-0.3cm}
 Weak individual correlations suggest \textbf{non-linear feature combinations} are important.
@@ -149,10 +149,10 @@ Input (5) $\rightarrow$ Dense(64, ReLU) $\rightarrow$ Dense(32, ReLU) $\rightarr
 
 \begin{frame}{Model Comparison}
 \begin{columns}[T]
-\begin{column}{0.52\textwidth}
+\begin{column}{0.50\textwidth}
 \begin{table}
 \centering
-\scriptsize
+\tiny
 \begin{tabular}{lccccc}
 \toprule
 \textbf{Model} & \textbf{Acc.} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{AUC} \\
@@ -167,7 +167,7 @@ Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
 \end{tabular}
 \end{table}
 \end{column}
-\begin{column}{0.46\textwidth}
+\begin{column}{0.44\textwidth}
 \includegraphics[width=\textwidth]{figures/f1_comparison.png}
 \end{column}
 \end{columns}
@@ -182,41 +182,44 @@ Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
 \begin{frame}{Key Results: Logistic Regression \& Random Forest}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
-\textbf{Logistic Regression:}
-\begin{itemize}
-    \item Accuracy \lrAcc\ $<$ naive \naiveAcc\ (balanced weights sacrifice majority-class accuracy)
-    \item Recall \lrRec\ catches 62\% of failures; precision \lrPrec\ means many false alarms
-    \item CV F1: $\lrCvMean \pm \lrCvStd$ --- very stable
-    \item Linear boundary cannot capture non-linear interactions (best $r$ = \tempCorr)
-\end{itemize}
+\textbf{Logistic Regression:}\\[2pt]
+{\small
+\begin{itemize}\setlength{\itemsep}{1pt}
+    \item Accuracy \lrAcc\ $<$ naive \naiveAcc
+    \item Recall \lrRec; precision \lrPrec
+    \item CV F1: $\lrCvMean \pm \lrCvStd$
+    \item Linear boundary limits performance
+\end{itemize}}
 \end{column}
 \begin{column}{0.48\textwidth}
-\textbf{Random Forest (tuned):}
-\begin{itemize}
-    \item F1 improved from \lrFone\ (LR) to \rfFone\ --- non-linear interactions matter
-    \item Precision \rfPrec\ $\approx$ perfect: virtually no false alarms
-    \item Recall \rfRec\ --- conservative, misses $>$50\% of failures
-    \item \rfImpNameA\ (\rfImpA) + \rfImpNameB\ (\rfImpB) = 58\% of importance
-\end{itemize}
+\textbf{Random Forest (tuned):}\\[2pt]
+{\small
+\begin{itemize}\setlength{\itemsep}{1pt}
+    \item F1: \lrFone\ (LR) $\to$ \rfFone
+    \item Precision \rfPrec\ $\approx$ perfect
+    \item Recall \rfRec; misses $>$50\% of failures
+    \item \rfImpNameA\ + \rfImpNameB\ = 58\% importance
+\end{itemize}}
 \end{column}
 \end{columns}
 
-\vspace{0.3cm}
+\vspace{0.1cm}
 \begin{center}
-\includegraphics[width=0.48\textwidth]{figures/feature_importance.png}
+\includegraphics[width=0.40\textwidth]{figures/feature_importance.png}
 \end{center}
 \end{frame}
 
 \begin{frame}{Key Results: Neural Network}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
-\begin{itemize}
-    \item F1 = \annFone\ $\approx$ RF's \rfFone\ --- similar ceiling with 5 features
-    \item Precision \annPrec, recall \annRec\ --- middle ground between LR and RF
+{\small
+\begin{itemize}\setlength{\itemsep}{2pt}
+    \item F1 = \annFone\ $\approx$ RF's \rfFone
+    \item Precision \annPrec, recall \annRec
     \item \annFN\ missed failures, \annFP\ false alarms
-    \item Early Stopping at epoch $\sim$\annBestEpoch; val accuracy \annValAcc
-    \item AUC = \annAuc, tied with RF --- both architectures find similar boundaries
-\end{itemize}
+    \item Early Stopping at epoch $\sim$\annBestEpoch
+    \item AUC = \annAuc, tied with RF
+\end{itemize}}
 \end{column}
 \begin{column}{0.48\textwidth}
 \includegraphics[width=\textwidth]{figures/ann_learning_curves.png}
@@ -226,21 +229,22 @@ Isolation Forest       & \isoAcc & \isoPrec & \isoRec & \isoFone & \isoAuc \\
 
 \begin{frame}{Confusion Matrices — All Models}
 \begin{center}
-\includegraphics[width=0.72\textwidth]{figures/confusion_matrices.png}
+\includegraphics[width=0.55\textwidth]{figures/confusion_matrices.png}
 \end{center}
 \end{frame}
 
 \begin{frame}{PCA — Variance Analysis}
 \begin{columns}[T]
 \begin{column}{0.42\textwidth}
-\begin{itemize}
+{\small
+\begin{itemize}\setlength{\itemsep}{2pt}
     \item All \pcaNcomp/5 components needed for 95\% variance
-    \item PC1: \pcaVarOne\%, PC2: \pcaVarTwo\% --- nearly uniform ($\approx$20\% each)
-    \item LR+PCA F1 = \pcaFone\ --- identical to full LR ($\Delta$F1 = $\pcaDeltaF$)
-    \item Sensors are nearly orthogonal: no redundancy, every sensor matters
-\end{itemize}
+    \item PC1: \pcaVarOne\%, PC2: \pcaVarTwo\% --- nearly uniform
+    \item LR+PCA F1 = \pcaFone\ ($\Delta$F1 = $\pcaDeltaF$)
+    \item Sensors are nearly orthogonal: no redundancy
+\end{itemize}}
 \end{column}
-\begin{column}{0.56\textwidth}
+\begin{column}{0.54\textwidth}
 \includegraphics[width=\textwidth]{figures/pca_scree_plot.png}
 \end{column}
 \end{columns}

@@ -1,0 +1,125 @@
+PRESENTATION SCRIPT — Group 22
+Smart Manufacturing IoT-Based Predictive Maintenance & Anomaly Detection
+MANU 465, University of British Columbia
+Total time: ~6 minutes
+
+================================================================================
+AOMSIN NIMSOMBUN — Slides 1–5 (~90 sec)
+Problem & Motivation, Dataset
+================================================================================
+
+[SLIDE 1 — Title Page]
+
+Hi everyone, we're Group 22. I'm Aomsin, and today together with Colin, Kaoklong, and Daniel, we'll present our project on predictive maintenance and anomaly detection using IoT sensor data in smart manufacturing.
+
+[SLIDE 2 — Outline]
+
+Here's a quick outline. We'll start with the problem and our dataset, then cover our methodology — five machine learning techniques — followed by results, discussion, and future work.
+
+[SLIDE 3 — Problem & Motivation]
+
+In modern smart factories, IoT sensors continuously monitor equipment — recording temperature, vibration, pressure, and humidity. Despite this rich data, most facilities still rely on reactive or scheduled maintenance. Unplanned downtime can cost hundreds of thousands of dollars per hour, so even small improvements in early failure detection are extremely valuable.
+
+Our primary goal is to predict whether a machine needs maintenance using sensor data — this is a supervised classification problem, where the model learns from historical examples of failures and non-failures. As a secondary goal, we explore unsupervised anomaly detection — that means identifying unusual machine behavior without needing any labeled examples of past failures, which is important because in many real facilities, you simply don't have that labeled history.
+
+[SLIDE 4 — Dataset Overview]
+
+We used the Smart Manufacturing IoT-Cloud Monitoring Dataset from Kaggle. It contains 100,000 sensor readings from 50 machines, collected at one-minute intervals over 69 days. Out of 13 total columns, we kept only 5 raw sensor features — temperature, vibration, humidity, pressure, and energy consumption. We excluded derived features like machine status and anomaly flag to prevent data leakage — meaning these columns were calculated from the maintenance label itself, so using them would be like giving the model the answer key during a test.
+
+As you can see in the bar chart, the classes are imbalanced: about 80% of records require no maintenance, while only about 20% do. This imbalance is important because a model could get 80% accuracy by simply predicting "no maintenance" every time, without learning anything useful. Temperature has the strongest correlation with the target at r = 0.283, followed by vibration at r = 0.113.
+
+[SLIDE 5 — Correlation Heatmap]
+
+This heatmap shows the correlations between all sensor features and the maintenance target. Notice that individual correlations are quite weak — the strongest is only 0.283. This tells us that no single sensor alone is a strong predictor, and suggests that non-linear feature combinations will be important — which motivates using models like Random Forest and neural networks.
+
+Now I'll hand off to Colin to walk you through our methodology.
+
+
+================================================================================
+COLIN XIONG — Slides 6–9 (~90 sec)
+Methodology, Model Comparison Overview
+================================================================================
+
+[SLIDE 6 — Preprocessing]
+
+Thanks, Aomsin. I'll cover our methodology, starting with preprocessing.
+
+We took several careful steps. First, we dropped non-predictive columns — timestamp and machine ID. Then we excluded five derived features that encode the target variable — for example, machine status directly indicates failure, so including it would be data leakage.
+
+That left us with 5 raw sensor features. We did a stratified 80/20 train-test split — 80,000 samples for training and 20,000 held out for testing — with stratification meaning we preserved the same 80/20 class ratio in both sets. We standardized features — scaling them to zero mean and unit variance — using StandardScaler fitted only on training data, because if we fit on test data too, the model would indirectly "see" test information during training. And we used balanced class weights, which tells the model to pay roughly 4 times more attention to maintenance cases, compensating for the fact that they make up only 20% of the data.
+
+[SLIDE 7 — ML Techniques Applied]
+
+We applied five ML techniques across different model families.
+
+On the supervised side: Logistic Regression as an interpretable linear baseline — it draws a straight-line decision boundary, and we used 5-fold cross-validation to verify it generalizes consistently. Random Forest, which builds many decision trees and combines their votes, letting it capture non-linear patterns — we used GridSearchCV to automatically search for the best hyperparameters. And an Artificial Neural Network built with TensorFlow, which learns increasingly abstract representations of the data through multiple layers.
+
+For unsupervised and dimensionality reduction: PCA — Principal Component Analysis — which checks whether any of our sensors are redundant, and Isolation Forest, which detects anomalies by finding data points that are easy to isolate from the rest. We evaluated all models using accuracy, precision — how many of our maintenance predictions were correct, recall — how many actual maintenance cases we caught, F1-score — the balance between precision and recall, and AUC — Area Under the ROC Curve, which measures how well a model ranks positive cases above negative ones across all thresholds.
+
+[SLIDE 8 — ANN Architecture]
+
+For the neural network, we used a funnel architecture: 5 inputs going through three hidden layers — 64, 32, and 16 neurons — progressively compressing the data into more abstract representations. Each layer uses ReLU activation, which simply zeros out negative values, and the final layer uses sigmoid to output a probability between 0 and 1. We trained with the Adam optimizer and binary crossentropy loss. To prevent overfitting — where the model memorizes training data instead of learning general patterns — we used Early Stopping with patience of 10, meaning training halts if validation performance doesn't improve for 10 consecutive epochs, and the best weights are restored automatically.
+
+[SLIDE 9 — Model Comparison]
+
+Here's our results summary. The table shows all models side by side, and the bar chart on the right compares F1-scores visually.
+
+The key takeaway: non-linear models — Random Forest and the neural network — both achieve F1 scores around 0.62, compared to Logistic Regression's 0.40. An F1 of 0.62 means the model is finding a reasonable balance between catching real failures and not raising too many false alarms. Both RF and ANN reach nearly identical AUC values — 0.723 and 0.725 — where 1.0 would be perfect and 0.5 is random guessing. This convergence suggests a performance ceiling with just 5 raw sensor features — the models have extracted as much signal as these inputs can provide.
+
+Now Kaoklong will dive deeper into each model's results.
+
+
+================================================================================
+KAOKLONG PANITPONGPUN — Slides 10–14 (~90 sec)
+Detailed Model Results
+================================================================================
+
+[SLIDE 10 — Key Results: Logistic Regression & Random Forest]
+
+Thanks, Colin. Let me break down the individual model results.
+
+Logistic Regression with balanced class weights achieves accuracy of 0.635, which is actually below the naive baseline of 0.80. That sounds counterintuitive, but it makes sense — by weighting the minority class more heavily, the model sacrifices some majority-class accuracy in order to catch more actual failures. It catches about 63% of true maintenance cases — that's recall — but precision is only 0.297, meaning roughly 7 out of 10 maintenance alerts are false alarms. Cross-validation F1 of 0.409 plus or minus 0.006 across 5 folds confirms very stable and consistent generalization.
+
+Random Forest improves F1 from 0.40 to 0.62 — a substantial gain that comes from its ability to capture non-linear interactions between sensors, like "high temperature combined with high vibration." Its strategy is opposite to Logistic Regression: near-perfect precision of 0.999 — virtually no false alarms, so when it says maintenance is needed, it's almost certainly right — but recall of only 0.449, meaning it stays silent on over half of actual failures. The feature importance chart shows temperature at 0.365 and vibration at 0.224 together account for about 58% of the model's predictive power — so these two sensors are the most critical to monitor.
+
+[SLIDE 11 — Key Results: Neural Network]
+
+The ANN achieved F1 of 0.606 and AUC of 0.725 — very close to Random Forest's 0.619 and 0.723. The fact that two completely different model architectures converge to nearly the same performance strongly suggests they've both found the best decision boundary that five raw sensor features can support. The ANN sits in the middle ground on the precision-recall tradeoff: precision 0.903 means its maintenance alerts are usually correct, and recall 0.456 means it catches about 46% of real failures. Early Stopping halted training around epoch 90 out of a maximum 100, and the learning curves on the right show smooth convergence — the training and validation lines stay close together, which tells us the model isn't overfitting.
+
+[SLIDE 12 — Confusion Matrices]
+
+Here's a side-by-side view of all four confusion matrices. A confusion matrix shows what the model predicted versus what actually happened — the diagonal cells are correct predictions, and the off-diagonal cells are errors. You can clearly see the different strategies: Logistic Regression spreads its errors — lots of false positives, meaning unnecessary maintenance alerts, but also catches more real failures. Random Forest and the ANN concentrate their errors as false negatives — they rarely cry wolf, but they miss over half the actual failures. Isolation Forest shows a more balanced error profile between the two error types.
+
+[SLIDE 13 — PCA — Variance Analysis]
+
+PCA — Principal Component Analysis — transforms the original features into new uncorrelated directions called principal components, ranked by how much data variation they capture. If some sensors were redundant, we could drop components and still retain most of the information. But here, all 5 of 5 components are needed to retain 95% of variance, and each explains roughly 20% — nearly uniform. This means each sensor measures something genuinely different. When we trained Logistic Regression on PCA-reduced features, we got identical F1, confirming no sensor can be removed without losing information.
+
+[SLIDE 14 — Isolation Forest]
+
+Isolation Forest works by randomly partitioning the data — anomalous points, being different from the majority, get isolated in fewer splits. It doesn't need any labels at all. It achieved F1 of 0.371 and AUC of 0.657. While lower than our supervised models, AUC of 0.657 is well above the 0.5 random-guessing baseline, confirming it captures real anomalous structure without ever seeing a single label. The gap from Random Forest's F1 of 0.619 down to Isolation Forest's 0.371 quantifies exactly how much value labeled data provides. Still, Isolation Forest remains a viable first-line monitoring option for facilities that don't have labeled failure histories.
+
+Over to Daniel for the discussion and conclusion.
+
+
+================================================================================
+DANIEL BENJAMIN — Slides 15–17 (~90 sec)
+Discussion, Conclusion & Future Work, Thank You
+================================================================================
+
+[SLIDE 15 — Strengths & Limitations]
+
+Thanks, Kaoklong. Let me wrap up with our discussion.
+
+On the strengths side: we applied five techniques spanning linear, ensemble, deep learning, dimensionality reduction, and unsupervised methods. We used rigorous evaluation with stratified splits, cross-validation, multiple metrics, and a naive baseline. We carefully prevented data leakage, and the feature importance results — highlighting temperature and vibration — are directly actionable for real-world sensor monitoring.
+
+On limitations: the dataset is synthetic, so it may not capture real-world noise or sensor drift. We only used 5 raw features; richer feature engineering could help. Our models treat each record independently, ignoring temporal degradation patterns. And we validated on a single dataset, so generalizability is unconfirmed.
+
+[SLIDE 16 — Conclusion & Future Work]
+
+To summarize: Random Forest achieved the best F1 of 0.619 with near-perfect precision; the ANN matched its AUC at 0.725. Non-linear models improved F1 by about 50% over the linear baseline. Temperature and vibration account for 58% of RF's predictive power. PCA confirmed all 5 sensors are non-redundant. And Isolation Forest showed viable label-free monitoring with AUC of 0.657. The performance ceiling at F1 around 0.62 suggests richer features are needed to go further.
+
+For future work, we'd explore LSTM and GRU networks — these are recurrent neural networks designed for sequential data, so they could learn temporal degradation patterns like "vibration has been gradually increasing over the past hour." We'd also try rolling-window feature engineering — computing statistics like moving averages and trends from the raw sensor streams. SHAP values would add explainability, telling us exactly why the model flagged a specific machine for maintenance. And finally, validating on real-world industrial datasets would test whether these results hold outside a simulated environment.
+
+[SLIDE 17 — Thank You]
+
+That concludes our presentation. Thank you for listening — happy to take any questions.
